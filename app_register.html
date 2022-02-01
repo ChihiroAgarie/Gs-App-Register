@@ -17,9 +17,6 @@
         <li>
           <label for="name">登録者名</label> <input type="text" id="name">
         </li>
-        <!-- <li>
-          <textarea name="" id="text" cols="30" rows="10"></textarea>
-        </li> -->
         <li>
           <label for="title">タイトル</label> <textarea name="" id="title" cols="30" rows="5"></textarea>
         </li>
@@ -93,7 +90,8 @@
           歳
         </li>
         <li>
-          <label for="img">メイン画像</label> <input type="file" name="img" accept=".png, .jpg, .jpeg">
+          <label for="img">メイン画像</label> <input type="file" name="img" accept=".png, .jpg, .jpeg" id="img">
+          <p id="imgpath"></p>
         </li>
         <li>
           <button id="send">登録</button>
@@ -125,8 +123,11 @@
     // TODO: Add SDKs for Firebase products that you want to use
     // https://firebase.google.com/docs/web/setup#available-libraries
 
-    // ↓追加
+    // Firestore import
     import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js";
+    // storage import
+    import { getStorage, ref, uploadBytes, getDownloadURL, getMetadata } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-storage.js";
+
 
     // Your web app's Firebase configuration
     const firebaseConfig = {
@@ -141,26 +142,50 @@
 
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
+
     const db = getFirestore(app);
 
+    const storage = getStorage(app);
 
     $('#send').on('click', function () {
       alert('登録が完了しました！');
-      // `db`が送信先 送信データはオブジェクトの形
+
+      //画像ファイルの取得
+      const file = $('#img')[0].files[0];
+      console.log(file);
+      //画像ファイルのアップロード
+      const storageRef = ref(storage, 'images/' + file.name);
+      console.log(file.name);
+      console.log(storageRef);
+      uploadBytes(storageRef, file).then((snapshot) => {
+        console.log('Uploaded a blob or file!');
+      });
+      getMetadata(storageRef)
+        .then((metadata) => {
+          console.log(metadata);
+        });
+      getDownloadURL(storageRef)
+        .then((url) => {
+          console.log(url);
+        });
+
       addDoc(collection(db, 'contents'), {
-        name: $('#name').val(),
-        // text: $('#text').val(),
+        name_fb: $('#name').val(),
         time: serverTimestamp(),
         title_fb: $('#title').val(),
         pref_fb: $('#pref').val(),
         age_fb: $('#age').val(),
+        // このimg_fbをdb入れたい。上のurlが消える
+        img_fb: url,
       });
+
+
       // 送信後にtextareaを空にする処理
-      // $('#text').val('');
       $('#name').val('');
       $('#title').val('');
       $('#pref').val('');
       $('#age').val('');
+      $('#img').val('');
     });
 
     // ↓まずデータ取得の条件を設定
@@ -179,16 +204,18 @@
       });
 
       // 「`」で囲んでタグ文字列を表現.「${}」で変数を埋め込み 
-      const tagArray = []; // `dataArray`は前回出てきたオブジェクトの配列 
+      const tagArray = [];
+      // `dataArray`は前回出てきたオブジェクトの配列 
       dataArray.forEach(function (data) {
         const datetime = convertFromFirestoreTimestampToDatetime(data.data.timestamp);
         tagArray.push(`
         <li id=${data.id}>
-        <p>${data.data.name}</p> 
+        <p>${data.data.name_fb}</p> 
         <p>${datetime}</p>
         <p>${data.data.title_fb}</p>
         <p>${data.data.pref_fb}</p>
         <p>${data.data.age_fb}</p>
+        <img src='${data.data.img_fb}'></img>
         </li> 
         `)
       })
