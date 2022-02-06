@@ -18,7 +18,7 @@
           <label for="name">登録者名</label> <input type="text" id="name">
         </li>
         <li>
-          <label for="title">タイトル</label> <textarea name="" id="title" cols="30" rows="5"></textarea>
+          <label for="place">施設・場所</label> <input type="text" id="place">
         </li>
         <li>
           <label for="pref">都道府県</label>
@@ -87,11 +87,17 @@
             <option value="9">9</option>
             <option value="10">10</option>
           </select>
-          歳
+          歳〜
+        </li>
+        <li>
+          <label for="title">タイトル</label> <textarea name="" id="title" cols="30" rows="5"></textarea>
+        </li>
+        <li>
+          <label for="detail">説明文</label> <textarea name="" id="detail" cols="30" rows="5"></textarea>
         </li>
         <li>
           <label for="img">メイン画像</label> <input type="file" name="img" accept=".png, .jpg, .jpeg" id="img">
-          <p id="imgpath"></p>
+          <!-- <p id="imgpath"></p> -->
         </li>
         <li>
           <button id="send">登録</button>
@@ -147,45 +153,88 @@
 
     const storage = getStorage(app);
 
+
+
+    // これで一応できた
     $('#send').on('click', function () {
       alert('登録が完了しました！');
 
-      //画像ファイルの取得
+      // async function Upload() {
+      //   var ImgToUpload = $('#img')[0].files[0];
+
+      //   const metaData = {
+      //     contentType: ImgToUpload.type
+      //   }
+
+      //   // 画像ファイルの参照
+      //   const storageRef = sRef(storage, 'images/' + file.name);
+
+      //   const UploadTask = uploadBytes(storageRef, ImgToUpload, metaData);
+
+      //   UploadTask.on('state-changed', (snapshot) => {
+      //   },
+      //     (error) => {
+      //       alert("error:image not uploaded");
+      //     },
+      //     () => {
+      //       getDownloadURL(UploadTask.snapshot.ref).then((downloadURL) => {
+      //         console.log(downloadURL);
+      //       });
+      //     }
+      //   );
+      // }
+
+      // //画像アップロード関数
       const file = $('#img')[0].files[0];
       console.log(file);
-      //画像ファイルのアップロード
+      // 画像ファイルの参照
       const storageRef = ref(storage, 'images/' + file.name);
       console.log(file.name);
       console.log(storageRef);
-      uploadBytes(storageRef, file).then((snapshot) => {
-        console.log('Uploaded a blob or file!');
-      });
-      getMetadata(storageRef)
-        .then((metadata) => {
-          console.log(metadata);
+      console.log(storageRef.fullPath);
+      // 画像アップロード
+      uploadBytes(storageRef, file)
+        .then((snapshot) => {
+          console.log('アップロード成功');
+          // ファイルダウンロード
+          getDownloadURL(ref(storage, 'images/' + file.name))
+            .then((url) => {
+              console.log(url);
+
+              // firestoreにデータ追加
+              addDoc(collection(db, 'contents'), {
+                name_fb: $('#name').val(),
+                place_fb: $('#place').val(),
+                pref_fb: $('#pref').val(),
+                age_fb: $('#age').val(),
+                title_fb: $('#title').val(),
+                detail_fb: $('#detail').val(),
+                time: serverTimestamp(),
+                // このimg_fbをdb入れたい。上のurlが消える
+                img_fb: url,
+              });
+
+              // 送信後にtextareaを空にする処理
+              $('#name').val('');
+              $('#place').val('');
+              $('#pref').val('');
+              $('#age').val('');
+              $('#title').val('');
+              $('#detail').val('');
+              $('#img').val('');
+            })
+            .catch((error) => {
+              console.log("URL習得失敗");
+            });
+        })
+        .catch((error) => {
+          console.log("アップロード失敗");
         });
-      getDownloadURL(storageRef)
-        .then((url) => {
-          console.log(url);
-        });
-
-      addDoc(collection(db, 'contents'), {
-        name_fb: $('#name').val(),
-        time: serverTimestamp(),
-        title_fb: $('#title').val(),
-        pref_fb: $('#pref').val(),
-        age_fb: $('#age').val(),
-        // このimg_fbをdb入れたい。上のurlが消える
-        // img_fb: url,
-      });
 
 
-      // 送信後にtextareaを空にする処理
-      $('#name').val('');
-      $('#title').val('');
-      $('#pref').val('');
-      $('#age').val('');
-      $('#img').val('');
+
+
+
     });
 
     // ↓まずデータ取得の条件を設定
@@ -209,13 +258,19 @@
       dataArray.forEach(function (data) {
         const datetime = convertFromFirestoreTimestampToDatetime(data.data.timestamp);
         tagArray.push(`
-        <li id=${data.id}>
-        <p>${data.data.name_fb}</p> 
-        <p>${datetime}</p>
-        <p>${data.data.title_fb}</p>
-        <p>${data.data.pref_fb}</p>
-        <p>${data.data.age_fb}</p>
-        <img src='${data.data.img_fb}'></img>
+        <li id=${data.id} class="show_li">
+          <div class="show_left">
+            <p>登録者名：${data.data.name_fb}</p> 
+            <p>登録日：${datetime}</p>
+            <p>施設・場所：${data.data.place_fb}</p>
+            <p>都道府県：${data.data.pref_fb}</p>
+            <p>対象年齢：${data.data.age_fb}歳〜</p>
+            <p>タイトル：${data.data.title_fb}</p>
+            <p>説明文：${data.data.detail_fb}</p>
+          </div>
+          <div class="show_right">
+            <img class="show_img" src='${data.data.img_fb}'></img>
+          </div>
         </li> 
         `)
       })

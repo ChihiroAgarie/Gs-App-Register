@@ -18,26 +18,36 @@ label{
     font-size: 16px;
 }
 
-header{
-    background-color: #fff;
-    border-bottom: 1px solid #ccc;
-    text-align: center;
+.input_area{
+    background-color: #ccc;
+    padding: 5px;
 }
 
-main{
-    border-bottom:1px solid #ccc;
+.show_li{
+    border: 1px solid #ccc;
+    text-align: left;
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
 }
 
-footer{
-    background-color: #fff;
-    border-bottom:1px solid #ccc;
-    text-align: center;
+.show_left{
+    width: 600px;
+}
+
+.show_right{
+    width: 350px;
+}
+
+.show_img{
+    width: 300px;
 }
 
 p{
     font-size: 16px;
-    text-align: center;
-    border-bottom:1px solid #fff;
+    margin: 0;
+    /* text-align: center; */
+    /* border-bottom:1px solid #fff; */
 }
 
 ul{
@@ -53,7 +63,7 @@ li{
     text-align: center;
     list-style-type:none;
     font-size: 16px;
-    margin: 10px;
+    margin-bottom: 10px;
     /* border: 1px solid #666; */
     /* background-color: #FFF; */
     /* display:table-cell;  
