@@ -256,7 +256,7 @@
       const tagArray = [];
       // `dataArray`は前回出てきたオブジェクトの配列 
       dataArray.forEach(function (data) {
-        const datetime = convertFromFirestoreTimestampToDatetime(data.data.timestamp);
+        const datetime = convertFromFirestoreTimestampToDatetime(data.data.time.seconds);
         tagArray.push(`
         <li id=${data.id} class="show_li">
           <div class="show_left">
